@@ -1,25 +1,212 @@
-;(function () {
-var r=Math.random,n=0,d=document,w=window,
-	i=d.createElement('img'),
-	z=d.createElement('div'),
-	zs=z.style,
-	a=w.innerWidth*r(),b=w.innerHeight*r();
-zs.position="fixed";
-zs.left=0;
-zs.top=0;
-zs.opacity=0;
-z.appendChild(i);
-i.src='data:image/gif;base64,R0lGODlhMAAwAJECAAAAAEJCQv///////yH/C05FVFNDQVBFMi4wAwEAAAAh+QQJAQACACwAAAAAMAAwAAACdpSPqcvtD6NcYNpbr4Z5ewV0UvhRohOe5UE+6cq0carCgpzQuM3ut16zvRBAH+/XKQ6PvaQyCFs+mbnWlEq0FrGi15XZJSmxP8OTRj4DyWY1lKdmV8fyLL3eXOPn6D3f6BcoOEhYaHiImKi4yNjo+AgZKTl5WAAAIfkECQEAAgAsAAAAADAAMAAAAnyUj6nL7Q+jdCDWicF9G1vdeWICao05ciUVpkrZIqjLwCdI16s+5wfck+F8JOBiR/zZZAJk0mAsDp/KIHRKvVqb2KxTu/Vdvt/nGFs2V5Bpta3tBcKp8m5WWL/z5PpbtH/0B/iyNGh4iJiouMjY6PgIGSk5SVlpeYmZqVkAACH5BAkBAAIALAAAAAAwADAAAAJhlI+py+0Po5y02ouz3rz7D4biSJbmiabq6gCs4B5AvM7GTKv4buby7vsAbT9gZ4h0JYmZpXO4YEKeVCk0QkVUlw+uYovE8ibgaVBSLm1Pa3W194rL5/S6/Y7P6/f8vp9SAAAh+QQJAQACACwAAAAAMAAwAAACZZSPqcvtD6OctNqLs968+w+G4kiW5omm6ooALeCusAHHclyzQs3rOz9jAXuqIRFlPJ6SQWRSaIQOpUBqtfjEZpfMJqmrHIFtpbGze2ZywWu0aUwWEbfiZvQdD4sXuWUj7gPos1EAACH5BAkBAAIALAAAAAAwADAAAAJrlI+py+0Po5y02ouz3rz7D4ZiCIxUaU4Amjrr+rDg+7ojXTdyh+e7kPP0egjabGg0EIVImHLJa6KaUam1aqVynNNsUvPTQjO/J84cFA3RzlaJO2495TF63Y7P6/f8vv8PGCg4SFhoeIg4UQAAIfkEBQEAAgAsAAAAADAAMAAAAnaUj6nL7Q+jXGDaW6+GeXsFdFL4UaITnuVBPunKtHGqwoKc0LjN7rdes70QQB/v1ykOj72kMghbPpm51pRKtBaxoteV2SUpsT/Dk0Y+A8lmNZSnZlfH8iy93lzj5+g93+gXKDhIWGh4iJiouMjY6PgIGSk5eVgAADs=';
-d.body.appendChild(z);
-function R(o,m){return Math.max(Math.min(o+(r()-.5)*400,m-50),50)}
-function A(){
-	var x=R(a,w.innerWidth),y=R(b,w.innerHeight),
-		d=5*Math.sqrt((a-x)*(a-x)+(b-y)*(b-y));
-	zs.opacity=n;n=1;
-	zs.transition=zs.webkitTransition=d/1e3+'s linear';
-	zs.transform=zs.webkitTransform='translate('+x+'px,'+y+'px)';
-	i.style.transform=i.style.webkitTransform=(a>x)?'':'scaleX(-1)';
-	a=x;b=y;
-	setTimeout(A,d);
-};setTimeout(A,r()*3e3);
-})();
+(function ($) {
+
+	'use strict';
+	var innerWidth,
+		innerHeight;
+
+	function Bat($body, options) {
+		this._options = options;
+
+		this._initialize($body);
+	}
+
+	Bat.prototype._initialize = function ($body) {
+		this._$bat = $('<div class="halloween-bat"/>');
+
+		this._x = this.randomPosition('horizontal');
+		this._y = this.randomPosition('vertical');
+		this._tx = this.randomPosition('horizontal');
+		this._ty = this.randomPosition('vertical');
+		this._dx = -5 + Math.random() * 10;
+		this._dy = -5 + Math.random() * 10;
+		this._positionUpdateTimer = this._getPositionUpdateTime();
+
+		this._frame = Math.random() * this._options.frames;
+		this._frame = Math.round(this._frame);
+		this._$bat.css({
+			position: 'absolute',
+			left: this._x + 'px',
+			top: this._y + 'px',
+			zIndex: this._options.zIndex,
+			width: this._options.width + 'px',
+			height: this._options.height + 'px',
+			backgroundImage: 'url(' + this._options.image + ')',
+			backgroundRepeat: 'no-repeat'
+		});
+
+		$body.append(this._$bat);
+	};
+
+	/**
+	 * @returns {number}
+	 * @private
+	 */
+	Bat.prototype._getPositionUpdateTime = function () {
+		return 0.5 + Math.random();
+	};
+
+	/**
+	 * @param {string} direction
+	 * @returns {number}
+	 */
+	Bat.prototype.randomPosition = function (direction) {
+		var screenLength,
+			imageLength;
+
+		if (direction === 'horizontal') {
+			screenLength = innerWidth;
+			imageLength = this._options.width;
+		}
+		else {
+			screenLength = innerHeight;
+			imageLength = this._options.height;
+		}
+
+		return Math.random() * (screenLength - imageLength);
+	};
+
+	Bat.prototype.move = function (deltaTime) {
+		var left,
+			top,
+			length,
+			dLeft,
+			dTop,
+			ddLeft,
+			ddTop;
+
+		left = this._tx - this._x;
+		top = this._ty - this._y;
+
+		length = Math.sqrt(left * left + top * top);
+		length = Math.max(1, length);
+
+		dLeft = this._options.speed * (left / length);
+		dTop = this._options.speed * (top / length);
+
+		ddLeft = (dLeft - this._dx) / this._options.flickering;
+		ddTop = (dTop - this._dy) / this._options.flickering;
+
+		this._dx += ddLeft * deltaTime * 25;
+		this._dy += ddTop * deltaTime * 25;
+
+		this._x += this._dx * deltaTime * 25;
+		this._y += this._dy * deltaTime * 25;
+
+		this._x = Math.max(0, Math.min(this._x, innerWidth - this._options.width));
+		this._y = Math.max(0, Math.min(this._y, innerHeight - this._options.height));
+
+		this.applyPosition();
+
+		this._positionUpdateTimer -= deltaTime;
+		if (this._positionUpdateTimer < 0) {
+			this._tx = this.randomPosition('horizontal');
+			this._ty = this.randomPosition('vertical');
+
+			this._positionUpdateTimer = this._getPositionUpdateTime();
+		}
+	};
+
+	Bat.prototype.applyPosition = function () {
+		this._$bat.css({
+			left: this._x + 'px',
+			top: this._y + 'px'
+		});
+	};
+
+	Bat.prototype.animate = function (deltaTime) {
+		var frame;
+
+		this._frame += 5 * deltaTime;
+
+		if (this._frame >= this._options.frames) {
+			this._frame -= this._options.frames;
+		}
+
+		frame = Math.floor(this._frame);
+
+		this._$bat.css(
+			'backgroundPosition',
+			'0 ' + (frame * -this._options.height) + 'px'
+		);
+	};
+
+	$.halloweenBats = function (options) {
+		var $window = $(window),
+			$target,
+			plugin,
+			isRunning = false,
+			isActiveWindow = true,
+			bats = [],
+			defaults = {
+				image: 'bats.png', // Path to the image.
+				zIndex: 10000, // The z-index you need.
+				amount: 5, // Bat amount.
+				width: 35, // Image width.
+				height: 20, // Animation frame height.
+				frames: 4, // Amount of animation frames.
+				speed: 20, // Higher value = faster.
+				flickering: 15, // Higher value = slower.
+				target: 'body' // Target element
+			};
+
+		options = $.extend({}, defaults, options);
+
+		$target = $(options.target);
+
+		innerWidth = $target.innerWidth();
+		innerHeight = $target.innerHeight();
+
+		plugin = {
+			isRunning: false,
+			start: function() {
+				var lastTime = Date.now();
+
+				isRunning = true;
+
+				function animate() {
+					var time = Date.now(),
+						deltaTime = (time - lastTime) / 1000;
+
+					lastTime = time;
+
+					if (isActiveWindow) {
+						$.each(bats, function (index, bat) {
+							bat.move(deltaTime);
+							bat.animate(deltaTime);
+						});
+					}
+
+					if (isRunning) {
+						requestAnimationFrame(animate);
+					}
+				}
+
+				animate();
+			},
+			stop: function() {
+				isRunning = false;
+			}
+		};
+
+		while (bats.length < options.amount) {
+			bats.push(new Bat($target, options));
+		}
+
+		plugin.start();
+
+		$window.resize(function () {
+			innerWidth = $target.innerWidth();
+			innerHeight = $target.innerHeight();
+		});
+
+		$window.focus(function() {
+			isActiveWindow = true;
+		});
+
+		$window.blur(function() {
+			isActiveWindow = false;
+		});
+
+		return plugin;
+	};
+}(jQuery));
